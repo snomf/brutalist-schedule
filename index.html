@@ -157,8 +157,6 @@
 
   <script>
     const API_URL = '/api/calendar';
-    const PASS_KEY = 'specialguest';
-    let rawCalendarData = null;
 
     const tokenInput = document.getElementById('access-token');
     const authBtn = document.getElementById('auth-btn');
@@ -170,59 +168,55 @@
       if (e.key === 'Enter') renderCalendar();
     });
 
-    async function init() {
-      try {
-        const response = await fetch(API_URL);
-        if (!response.ok) throw new Error('DATA_UNAVAILABLE');
-        rawCalendarData = await response.text();
-        renderCalendar();
-      } catch (err) {
-        container.innerHTML = `<div class="error">ERR: ${err.message}</div>`;
-      }
-    }
-
-    function renderCalendar() {
-      if (!rawCalendarData) return;
-
+    async function renderCalendar() {
       const token = tokenInput.value.trim();
-      const isAuthorized = (token === PASS_KEY);
       
       try {
-        const jcalData = ICAL.parse(rawCalendarData);
-        const comp = new ICAL.Component(jcalData);
-        const vevents = comp.getAllSubcomponents('vevent');
+        container.innerHTML = '<div class="loading">FETCHING SCHEDULE DATA...</div>';
         
+        const response = await fetch(`${API_URL}?token=${encodeURIComponent(token)}`);
+        if (!response.ok) throw new Error('DATA_UNAVAILABLE');
+        
+        const result = await response.json();
+        const feeds = result.feeds || [];
+        const isAuthorized = result.isAuthorized;
+
         const events = [];
         const now = ICAL.Time.now();
-        // Lookahead window: roughly 30 days
         const windowEnd = now.clone();
         windowEnd.addDuration(new ICAL.Duration({ days: 30 }));
 
-        vevents.forEach(vevent => {
-          const event = new ICAL.Event(vevent);
-          
-          if (event.isRecurring()) {
-            const iter = event.iterator();
-            let next;
-            while ((next = iter.next()) && next.compare(windowEnd) < 0) {
-              if (next.compare(now) >= 0) {
-                const occ = event.getOccurrenceDetails(next);
+        feeds.forEach(feedData => {
+          const jcalData = ICAL.parse(feedData);
+          const comp = new ICAL.Component(jcalData);
+          const vevents = comp.getAllSubcomponents('vevent');
+
+          vevents.forEach(vevent => {
+            const event = new ICAL.Event(vevent);
+            
+            if (event.isRecurring()) {
+              const iter = event.iterator();
+              let next;
+              while ((next = iter.next()) && next.compare(windowEnd) < 0) {
+                if (next.compare(now) >= 0) {
+                  const occ = event.getOccurrenceDetails(next);
+                  events.push({
+                    title: event.summary,
+                    startDate: occ.startDate.toJSDate(),
+                    endDate: occ.endDate.toJSDate()
+                  });
+                }
+              }
+            } else {
+              if (event.endDate.compare(now) >= 0) {
                 events.push({
                   title: event.summary,
-                  startDate: occ.startDate.toJSDate(),
-                  endDate: occ.endDate.toJSDate()
+                  startDate: event.startDate.toJSDate(),
+                  endDate: event.endDate.toJSDate()
                 });
               }
             }
-          } else {
-            if (event.endDate.compare(now) >= 0) {
-              events.push({
-                title: event.summary,
-                startDate: event.startDate.toJSDate(),
-                endDate: event.endDate.toJSDate()
-              });
-            }
-          }
+          });
         });
 
         // Sort by start date
@@ -242,17 +236,15 @@
           const timeString = formatTime(e.startDate) + ' - ' + formatTime(e.endDate);
           const dateString = formatDate(e.startDate);
           
-          let displayTitle = isAuthorized ? e.title : 'STATUS: BUSY';
-
           el.innerHTML = `
             <div class="event-time">${dateString} // ${timeString}</div>
-            <div class="event-title">${displayTitle}</div>
+            <div class="event-title">${e.title}</div>
           `;
           container.appendChild(el);
         });
 
       } catch (err) {
-        container.innerHTML = `<div class="error">PARSE_ERR: FAILED TO PARSE ICS</div>`;
+        container.innerHTML = `<div class="error">ERR: ${err.message}</div>`;
         console.error(err);
       }
     }
@@ -265,7 +257,8 @@
       return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
     }
 
-    init();
+    // Initial render
+    renderCalendar();
   </script>
 </body>
 </html>
