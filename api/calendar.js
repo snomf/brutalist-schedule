@@ -5,11 +5,22 @@ export default async function handler(req, res) {
   }
 
   const urls = urlsEnv.split(',').map(u => u.trim());
-  const tokensEnv = process.env.ACCESS_TOKENS || process.env.ACCESS_TOKEN || 'specialguest';
-  const validTokens = tokensEnv.split(',').map(t => t.trim());
+  
+  // Environment passwords configuration
+  const guestTokensEnv = process.env.GUEST_PASSWORDS || process.env.ACCESS_TOKENS || process.env.ACCESS_TOKEN || 'specialguest';
+  const guestTokens = guestTokensEnv.split(',').map(t => t.trim());
+  
+  const adminTokensEnv = process.env.ADMIN_PASSWORDS || process.env.ADMIN_PASSWORD || 'admin';
+  const adminTokens = adminTokensEnv.split(',').map(t => t.trim());
 
   const providedToken = req.query.token || '';
-  const isAuthorized = validTokens.includes(providedToken);
+  
+  let accessLevel = 'guest';
+  if (adminTokens.includes(providedToken)) {
+    accessLevel = 'admin';
+  } else if (guestTokens.includes(providedToken)) {
+    accessLevel = 'specialguest';
+  }
 
   try {
     const fetchPromises = urls.map(async (url) => {
@@ -19,7 +30,7 @@ export default async function handler(req, res) {
       }
       let text = await response.text();
       
-      if (!isAuthorized) {
+      if (accessLevel === 'guest') {
         // Securely redact sensitive fields (handling iCal line folding)
         text = text.replace(/^SUMMARY[:;].*(?:\r?\n[ \t].*)*/gm, 'SUMMARY:STATUS: BUSY');
         text = text.replace(/^DESCRIPTION[:;].*(?:\r?\n[ \t].*)*/gm, 'DESCRIPTION:REDACTED');
@@ -34,7 +45,7 @@ export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Content-Type', 'application/json');
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate');
-    res.status(200).json({ feeds, isAuthorized });
+    res.status(200).json({ feeds, accessLevel });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
