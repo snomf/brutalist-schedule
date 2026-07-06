@@ -9,1016 +9,559 @@
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;700&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
   <style>
-    /* ─── CSS Variables / Themes ────────────────────────────── */
+    /* ── Themes ─────────────────────────────────────────── */
     :root {
-      --bg:          #0a0a0a;
-      --surface:     #141414;
-      --surface2:    #1e1e1e;
-      --border:      #2a2a2a;
-      --border-strong: #444;
-      --fg:          #e8e8e8;
-      --fg-muted:    #888;
-      --accent:      #ffffff;
-      --accent-bg:   rgba(255,255,255,0.07);
-      --busy-bg:     rgba(255,255,255,0.05);
-      --busy-border: #3a3a3a;
-      --event-bg:    #1a1a1a;
-      --event-border:#404040;
-      --today-bg:    rgba(255,255,255,0.04);
-      --font:        'IBM Plex Mono', 'Courier New', monospace;
-      --radius:      4px;
+      --bg:       #0a0a0a;
+      --surface:  #141414;
+      --surface2: #1c1c1c;
+      --border:   #252525;
+      --bstrong:  #3a3a3a;
+      --fg:       #e0e0e0;
+      --fmuted:   #666;
+      --accent:   #fff;
+      --abg:      rgba(255,255,255,.08);
+      --bbg:      rgba(255,255,255,.04);
+      --bborder:  #2c2c2c;
+      --todaybg:  rgba(255,255,255,.03);
+      --font:     'IBM Plex Mono', 'Courier New', monospace;
+      --r:        4px;
+      --gh:       56px; /* hour height */
+      --gw:       52px; /* gutter width */
     }
-
     [data-theme="green"] {
-      --bg:          #020a02;
-      --surface:     #061406;
-      --surface2:    #0a1f0a;
-      --border:      #143214;
-      --border-strong:#2a6a2a;
-      --fg:          #a0e8a0;
-      --fg-muted:    #4a7a4a;
-      --accent:      #00ff41;
-      --accent-bg:   rgba(0,255,65,0.07);
-      --busy-bg:     rgba(0,255,65,0.04);
-      --busy-border: #1a3a1a;
-      --event-bg:    #0a180a;
-      --event-border:#2a5a2a;
-      --today-bg:    rgba(0,255,65,0.04);
+      --bg:#020a02;--surface:#061406;--surface2:#0d1f0d;--border:#142814;--bstrong:#2a5a2a;
+      --fg:#90d890;--fmuted:#3a6a3a;--accent:#00e83a;--abg:rgba(0,232,58,.08);
+      --bbg:rgba(0,232,58,.03);--bborder:#1a3a1a;--todaybg:rgba(0,232,58,.03);
     }
-
     [data-theme="sepia"] {
-      --bg:          #1a1510;
-      --surface:     #231d14;
-      --surface2:    #2d2518;
-      --border:      #3d3020;
-      --border-strong:#6d5a38;
-      --fg:          #d4b896;
-      --fg-muted:    #8a7258;
-      --accent:      #e8c87a;
-      --accent-bg:   rgba(232,200,122,0.07);
-      --busy-bg:     rgba(232,200,122,0.04);
-      --busy-border: #4a3a20;
-      --event-bg:    #20180e;
-      --event-border:#5a4428;
-      --today-bg:    rgba(232,200,122,0.04);
+      --bg:#151009;--surface:#1e1608;--surface2:#27200e;--border:#352a14;--bstrong:#6a5228;
+      --fg:#ccaa78;--fmuted:#7a6040;--accent:#e8bb5a;--abg:rgba(232,187,90,.08);
+      --bbg:rgba(232,187,90,.03);--bborder:#42320e;--todaybg:rgba(232,187,90,.03);
     }
-
     [data-theme="light"] {
-      --bg:          #f5f5f0;
-      --surface:     #ffffff;
-      --surface2:    #ebebeb;
-      --border:      #d0d0c8;
-      --border-strong:#a0a099;
-      --fg:          #1a1a1a;
-      --fg-muted:    #666660;
-      --accent:      #000000;
-      --accent-bg:   rgba(0,0,0,0.06);
-      --busy-bg:     rgba(0,0,0,0.03);
-      --busy-border: #ccccc5;
-      --event-bg:    #f0f0ea;
-      --event-border:#b0b0a8;
-      --today-bg:    rgba(0,0,0,0.03);
+      --bg:#f2f2ee;--surface:#fff;--surface2:#eaeae6;--border:#d8d8d2;--bstrong:#9a9a94;
+      --fg:#1a1a18;--fmuted:#6a6a68;--accent:#111;--abg:rgba(0,0,0,.05);
+      --bbg:rgba(0,0,0,.025);--bborder:#ccccc8;--todaybg:rgba(0,0,0,.025);
     }
 
-    /* ─── Reset ─────────────────────────────────────────────── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    /* ── Reset ───────────────────────────────────────────── */
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg);color:var(--fg);font-family:var(--font);font-size:13px;
+         line-height:1.5;min-height:100vh;transition:background .2s,color .2s}
 
-    body {
-      background: var(--bg);
-      color: var(--fg);
-      font-family: var(--font);
-      font-size: 13px;
-      line-height: 1.5;
-      min-height: 100vh;
-      transition: background 0.2s, color 0.2s;
-    }
+    /* ── App shell ───────────────────────────────────────── */
+    .app{max-width:1280px;margin:0 auto;padding:20px 16px 60px}
 
-    /* ─── Layout ─────────────────────────────────────────────── */
-    .app {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 24px 20px 60px;
-    }
+    /* ── Header ──────────────────────────────────────────── */
+    .hdr{display:flex;align-items:flex-start;justify-content:space-between;
+         gap:12px;flex-wrap:wrap;margin-bottom:20px;padding-bottom:16px;
+         border-bottom:1px solid var(--border)}
+    .hdr-l{display:flex;flex-direction:column;gap:3px}
+    .site-title{font-size:18px;font-weight:700;letter-spacing:.1em;
+                text-transform:uppercase;color:var(--accent)}
+    .site-sub{font-size:10px;color:var(--fmuted);text-transform:uppercase;letter-spacing:.1em}
+    .badge{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+           padding:3px 8px;border:1px solid var(--bstrong);color:var(--fmuted);border-radius:var(--r)}
+    .badge.admin{border-color:var(--accent);color:var(--accent)}
+    .badge.specialguest{color:var(--fg)}
 
-    /* ─── Header ─────────────────────────────────────────────── */
-    .header {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-      margin-bottom: 28px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
-    }
+    /* ── Auth ────────────────────────────────────────────── */
+    .auth{display:flex;gap:8px;align-items:center;margin-bottom:20px;flex-wrap:wrap}
+    .auth input{background:var(--surface);color:var(--fg);border:1px solid var(--border);
+                padding:8px 12px;font-family:var(--font);font-size:12px;border-radius:var(--r);
+                outline:none;width:210px;transition:border-color .15s}
+    .auth input:focus{border-color:var(--bstrong)}
+    .auth input::placeholder{color:var(--fmuted)}
 
-    .header-left { display: flex; flex-direction: column; gap: 4px; }
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn{background:var(--surface2);color:var(--fg);border:1px solid var(--border);
+         padding:8px 14px;font-family:var(--font);font-size:11px;font-weight:700;
+         letter-spacing:.08em;text-transform:uppercase;cursor:pointer;border-radius:var(--r);
+         transition:border-color .15s,background .15s}
+    .btn:hover{border-color:var(--bstrong);background:var(--abg)}
+    .btn.pri{background:var(--accent);color:var(--bg);border-color:var(--accent)}
+    .btn.pri:hover{opacity:.82}
+    .btn.del{border-color:transparent;color:#d44;font-size:10px;padding:3px 7px}
+    .btn.del:hover{background:rgba(200,50,50,.1);border-color:#d4444433}
 
-    .site-title {
-      font-size: 20px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      color: var(--accent);
-      text-transform: uppercase;
-    }
+    /* ── Admin Panel ─────────────────────────────────────── */
+    #admin{display:none;border:1px solid var(--border);border-radius:var(--r);
+           background:var(--surface);margin-bottom:20px;overflow:hidden}
+    .adm-hdr{padding:11px 16px;border-bottom:1px solid var(--border);
+             display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px}
+    .adm-title{font-size:10px;font-weight:700;letter-spacing:.12em;
+               text-transform:uppercase;color:var(--accent)}
+    .adm-note{font-size:10px;color:var(--fmuted)}
+    .adm-body{display:grid;grid-template-columns:1fr 1fr}
+    @media(max-width:640px){.adm-body{grid-template-columns:1fr}}
+    .adm-sec{padding:14px 16px;border-right:1px solid var(--border);
+             display:flex;flex-direction:column;gap:10px}
+    .adm-sec:last-child{border-right:none}
+    .adm-sec-t{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+               color:var(--fmuted);border-bottom:1px solid var(--border);padding-bottom:7px}
+    .fg{display:flex;flex-direction:column;gap:4px}
+    .fl{font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:var(--fmuted)}
+    .fi{background:var(--surface2);color:var(--fg);border:1px solid var(--border);
+        padding:7px 10px;font-family:var(--font);font-size:12px;border-radius:var(--r);
+        outline:none;width:100%;transition:border-color .15s}
+    .fi:focus{border-color:var(--bstrong)}
+    .fi::placeholder{color:var(--fmuted)}
+    .fr{display:flex;gap:6px}.fr .fi{flex:1;min-width:0}
 
-    .site-subtitle {
-      font-size: 11px;
-      color: var(--fg-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-    }
+    .blk-list{list-style:none;display:flex;flex-direction:column;gap:4px;
+              max-height:130px;overflow-y:auto}
+    .blk-item{display:flex;justify-content:space-between;align-items:center;
+              background:var(--surface2);border:1px solid var(--border);
+              padding:5px 8px;font-size:10px;border-radius:var(--r);gap:8px}
 
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      flex-wrap: wrap;
-    }
+    .theme-swatches{display:flex;gap:7px;align-items:center}
+    .swatch{width:26px;height:26px;border-radius:50%;border:2px solid var(--border);
+            cursor:pointer;transition:transform .12s,border-color .12s}
+    .swatch:hover{transform:scale(1.15)}
+    .swatch.on{border-color:var(--accent)}
+    .swatch[data-t="default"]{background:#0a0a0a}
+    .swatch[data-t="green"]{background:#020a02}
+    .swatch[data-t="sepia"]{background:#151009}
+    .swatch[data-t="light"]{background:#f2f2ee;border-color:#c0c0bc}
 
-    .badge {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 3px 8px;
-      border: 1px solid var(--border-strong);
-      color: var(--fg-muted);
-      border-radius: var(--radius);
-    }
-    .badge.admin  { border-color: var(--accent); color: var(--accent); }
-    .badge.specialguest { border-color: var(--border-strong); color: var(--fg); }
+    .env-box{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);
+             padding:10px 12px;font-size:10px;color:var(--fmuted);line-height:1.8}
+    .env-box code{color:var(--accent);background:var(--abg);padding:0 3px;border-radius:2px}
+    .env-box a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}
 
-    /* ─── Auth Bar ───────────────────────────────────────────── */
-    .auth-bar {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
-    }
+    /* ── Week nav ────────────────────────────────────────── */
+    .wnav{display:flex;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+    .wlabel{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+            color:var(--fg);flex:1;min-width:180px}
 
-    .auth-bar input {
-      background: var(--surface);
-      color: var(--fg);
-      border: 1px solid var(--border);
-      padding: 8px 12px;
-      font-family: var(--font);
-      font-size: 12px;
-      border-radius: var(--radius);
-      outline: none;
-      width: 220px;
-      transition: border-color 0.15s;
-    }
-    .auth-bar input:focus { border-color: var(--border-strong); }
-    .auth-bar input::placeholder { color: var(--fg-muted); }
+    /* ─────────────────────────────────────────────────────── */
+    /* CALENDAR GRID                                          */
+    /* ─────────────────────────────────────────────────────── */
+    .cal{border:1px solid var(--border);border-radius:var(--r);
+         overflow:hidden;background:var(--surface);overflow-x:auto}
 
-    .btn {
-      background: var(--surface2);
-      color: var(--fg);
-      border: 1px solid var(--border);
-      padding: 8px 14px;
-      font-family: var(--font);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      cursor: pointer;
-      border-radius: var(--radius);
-      transition: border-color 0.15s, background 0.15s;
-    }
-    .btn:hover { border-color: var(--border-strong); background: var(--accent-bg); }
-    .btn.primary { background: var(--accent); color: var(--bg); border-color: var(--accent); }
-    .btn.primary:hover { opacity: 0.85; }
-    .btn.danger { border-color: #c0392b44; color: #e74c3c; }
-    .btn.danger:hover { background: rgba(231,76,60,0.1); }
+    /* Day-header row */
+    .cal-hdr{display:flex;border-bottom:1px solid var(--border)}
+    .cal-hdr-gut{flex:0 0 var(--gw);border-right:1px solid var(--border)}
+    .cal-dh{flex:1;min-width:80px;padding:10px 6px 8px;text-align:center;
+            border-right:1px solid var(--border);font-size:10px;
+            letter-spacing:.08em;text-transform:uppercase;color:var(--fmuted)}
+    .cal-dh:last-child{border-right:none}
+    .day-num{display:block;font-size:20px;font-weight:700;color:var(--fg);
+             line-height:1;margin-top:3px;letter-spacing:-.02em}
+    .cal-dh.today .day-num,.cal-dh.today{color:var(--accent)}
 
-    /* ─── Week Nav ───────────────────────────────────────────── */
-    .week-nav {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 16px;
-      flex-wrap: wrap;
-    }
+    /* All-day strip */
+    .cal-allday{display:flex;border-bottom:1px solid var(--border);min-height:26px}
+    .cal-allday-gut{flex:0 0 var(--gw);border-right:1px solid var(--border);
+                    font-size:9px;color:var(--fmuted);text-align:right;
+                    padding:5px 5px 0 0;text-transform:uppercase;letter-spacing:.04em}
+    .cal-ad-col{flex:1;min-width:80px;border-right:1px solid var(--border);
+                padding:2px;display:flex;flex-direction:column;gap:2px}
+    .cal-ad-col:last-child{border-right:none}
+    .ad-ev{background:var(--abg);border-left:3px solid var(--accent);
+           border-radius:var(--r);padding:2px 5px;font-size:10px;font-weight:700;
+           text-transform:uppercase;letter-spacing:.04em;white-space:nowrap;
+           overflow:hidden;text-overflow:ellipsis}
 
-    .week-label {
-      font-size: 13px;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      color: var(--fg);
-      min-width: 200px;
-    }
+    /* Body */
+    .cal-body{display:flex;position:relative}
 
-    /* ─── Calendar Grid ──────────────────────────────────────── */
-    .calendar-wrap {
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      overflow: hidden;
-      background: var(--surface);
-    }
+    /* Time gutter */
+    .cal-gut{flex:0 0 var(--gw);border-right:1px solid var(--border)}
+    .cal-gut-cell{height:var(--gh);display:flex;align-items:flex-start;justify-content:flex-end;
+                  padding:5px 7px 0 0;font-size:10px;color:var(--fmuted);
+                  border-bottom:1px solid var(--border);white-space:nowrap}
+    .cal-gut-cell:last-child{border-bottom:none}
 
-    /* Day header row */
-    .cal-header {
-      display: grid;
-      grid-template-columns: 56px repeat(7, 1fr);
-      border-bottom: 1px solid var(--border);
-    }
+    /* Columns wrapper */
+    .cal-cols{display:flex;flex:1;position:relative}
 
-    .cal-header-gutter {
-      border-right: 1px solid var(--border);
-      background: var(--surface);
-    }
+    /* Single day column */
+    .cal-col{flex:1;min-width:80px;border-right:1px solid var(--border);position:relative}
+    .cal-col:last-child{border-right:none}
+    .cal-col.today{background:var(--todaybg)}
 
-    .cal-day-header {
-      padding: 10px 8px 8px;
-      text-align: center;
-      border-right: 1px solid var(--border);
-      font-size: 10px;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-      background: var(--surface);
-    }
-    .cal-day-header:last-child { border-right: none; }
+    /* Hour dividers inside column */
+    .h-cell{height:var(--gh);border-bottom:1px solid var(--border)}
+    .h-cell:last-child{border-bottom:none}
+    /* alternate very subtle shade */
+    .h-cell:nth-child(even){background:rgba(255,255,255,.008)}
+    [data-theme="light"] .h-cell:nth-child(even){background:rgba(0,0,0,.008)}
 
-    .cal-day-header .day-num {
-      display: block;
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--fg);
-      line-height: 1.1;
-      margin-top: 2px;
-      letter-spacing: -0.02em;
-    }
+    /* Events layer */
+    .ev-layer{position:absolute;inset:0;pointer-events:none}
 
-    .cal-day-header.today .day-num {
-      color: var(--accent);
-    }
+    .ev{position:absolute;left:2px;right:2px;border-radius:var(--r);
+        border-left:3px solid var(--accent);background:var(--surface2);
+        padding:4px 5px 3px;overflow:hidden;pointer-events:auto;
+        cursor:default;transition:background .12s;z-index:1}
+    .ev:hover{background:var(--abg);z-index:5}
+    .ev.busy{border-left-color:var(--bborder);background:var(--bbg)}
+    .ev.busy:hover{background:rgba(255,255,255,.06)}
+    [data-theme="light"] .ev.busy:hover{background:rgba(0,0,0,.05)}
+    .ev.override{border-left-style:dashed;opacity:.8}
+    .ev-name{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
+             color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3}
+    .ev-time{font-size:9px;color:var(--fmuted);margin-top:1px;
+             white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
-    .cal-day-header.today {
-      color: var(--accent);
-    }
+    /* Now line */
+    .now-line{position:absolute;left:0;right:0;height:1px;
+              background:var(--accent);z-index:10;opacity:.6;pointer-events:none}
+    .now-dot{position:absolute;left:-3px;top:-3px;width:7px;height:7px;
+             border-radius:50%;background:var(--accent)}
 
-    /* Body: time gutter + day columns */
-    .cal-body {
-      display: grid;
-      grid-template-columns: 56px repeat(7, 1fr);
-      overflow-x: auto;
-    }
-
-    .time-gutter {
-      border-right: 1px solid var(--border);
-      background: var(--surface);
-    }
-
-    .time-slot-label {
-      height: 56px;
-      display: flex;
-      align-items: flex-start;
-      justify-content: flex-end;
-      padding: 6px 8px 0 0;
-      font-size: 10px;
-      color: var(--fg-muted);
-      letter-spacing: 0.04em;
-      border-bottom: 1px solid var(--border);
-    }
-    .time-slot-label:last-child { border-bottom: none; }
-
-    .cal-day-col {
-      border-right: 1px solid var(--border);
-      position: relative;
-      min-width: 80px;
-    }
-    .cal-day-col:last-child { border-right: none; }
-    .cal-day-col.today { background: var(--today-bg); }
-
-    .hour-cell {
-      height: 56px;
-      border-bottom: 1px solid var(--border);
-    }
-    .hour-cell:last-child { border-bottom: none; }
-    .hour-cell:nth-child(even) {
-      background: rgba(255,255,255,0.012);
-    }
-    [data-theme="light"] .hour-cell:nth-child(even) {
-      background: rgba(0,0,0,0.012);
-    }
-
-    /* Events positioned absolutely */
-    .cal-events-layer {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-    }
-
-    .cal-event {
-      position: absolute;
-      left: 2px;
-      right: 2px;
-      border-radius: var(--radius);
-      border-left: 3px solid var(--accent);
-      background: var(--event-bg);
-      padding: 4px 6px 3px;
-      overflow: hidden;
-      pointer-events: auto;
-      cursor: default;
-      transition: background 0.12s;
-      z-index: 1;
-    }
-    .cal-event:hover { background: var(--accent-bg); z-index: 5; }
-
-    .cal-event.busy {
-      border-left-color: var(--busy-border);
-      background: var(--busy-bg);
-    }
-    .cal-event.busy:hover { background: rgba(255,255,255,0.07); }
-    [data-theme="light"] .cal-event.busy:hover { background: rgba(0,0,0,0.06); }
-
-    .cal-event.override {
-      border-left-style: dashed;
-      opacity: 0.8;
-    }
-
-    .event-name {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      color: var(--fg);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      line-height: 1.3;
-    }
-
-    .event-time-label {
-      font-size: 10px;
-      color: var(--fg-muted);
-      margin-top: 1px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* All-day row */
-    .cal-allday-row {
-      display: grid;
-      grid-template-columns: 56px repeat(7, 1fr);
-      border-bottom: 1px solid var(--border);
-      min-height: 28px;
-    }
-    .allday-gutter {
-      border-right: 1px solid var(--border);
-      font-size: 9px;
-      color: var(--fg-muted);
-      text-align: right;
-      padding: 6px 6px 0 0;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-    }
-    .allday-col {
-      border-right: 1px solid var(--border);
-      padding: 3px 2px;
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-    .allday-col:last-child { border-right: none; }
-    .allday-event {
-      background: var(--accent-bg);
-      border-left: 3px solid var(--accent);
-      border-radius: var(--radius);
-      padding: 2px 5px;
-      font-size: 10px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    /* Current time indicator */
-    .now-line {
-      position: absolute;
-      left: 0;
-      right: 0;
-      height: 1px;
-      background: var(--accent);
-      z-index: 10;
-      opacity: 0.7;
-    }
-    .now-dot {
-      position: absolute;
-      left: -3px;
-      top: -3px;
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: var(--accent);
-    }
-
-    /* ─── Loading / Error ────────────────────────────────────── */
-    .status-box {
-      padding: 40px;
-      text-align: center;
-      font-size: 12px;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-    }
-    .status-box.error {
-      color: #e74c3c;
-      border: 1px solid #c0392b33;
-      border-radius: var(--radius);
-      margin: 20px 0;
-    }
-
-    /* ─── Admin Panel ────────────────────────────────────────── */
-    #admin-panel {
-      display: none;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface);
-      margin-bottom: 24px;
-      overflow: hidden;
-    }
-
-    .admin-header {
-      padding: 12px 16px;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .admin-title {
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-
-    .admin-note {
-      font-size: 10px;
-      color: var(--fg-muted);
-    }
-
-    .admin-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-    }
-    @media (max-width: 700px) {
-      .admin-grid { grid-template-columns: 1fr; }
-    }
-
-    .admin-section {
-      padding: 16px;
-      border-right: 1px solid var(--border);
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-    }
-    .admin-section:last-child { border-right: none; }
-
-    .admin-section-title {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-      border-bottom: 1px solid var(--border);
-      padding-bottom: 8px;
-    }
-
-    .form-group {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-    }
-
-    .form-label {
-      font-size: 10px;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--fg-muted);
-    }
-
-    .form-input {
-      background: var(--surface2);
-      color: var(--fg);
-      border: 1px solid var(--border);
-      padding: 7px 10px;
-      font-family: var(--font);
-      font-size: 12px;
-      border-radius: var(--radius);
-      outline: none;
-      width: 100%;
-      transition: border-color 0.15s;
-    }
-    .form-input:focus { border-color: var(--border-strong); }
-    .form-input::placeholder { color: var(--fg-muted); }
-
-    .form-row { display: flex; gap: 6px; }
-    .form-row .form-input { flex: 1; min-width: 0; }
-
-    .blocker-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-      max-height: 140px;
-      overflow-y: auto;
-    }
-
-    .blocker-item {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      padding: 5px 8px;
-      font-size: 10px;
-      border-radius: var(--radius);
-      gap: 8px;
-    }
-
-    .env-info {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 10px 12px;
-      font-size: 10px;
-      color: var(--fg-muted);
-      line-height: 1.7;
-    }
-
-    .env-info code {
-      color: var(--accent);
-      font-family: var(--font);
-      background: var(--accent-bg);
-      padding: 0 3px;
-      border-radius: 2px;
-    }
-
-    .env-info a {
-      color: var(--accent);
-      text-decoration: underline;
-      text-underline-offset: 2px;
-    }
-
-    /* Theme buttons */
-    .theme-btns {
-      display: flex;
-      gap: 6px;
-      flex-wrap: wrap;
-    }
-
-    .theme-btn {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      border: 2px solid var(--border);
-      cursor: pointer;
-      transition: transform 0.12s, border-color 0.12s;
-      position: relative;
-    }
-    .theme-btn:hover { transform: scale(1.15); }
-    .theme-btn.active { border-color: var(--accent); }
-    .theme-btn[data-t="default"] { background: #0a0a0a; }
-    .theme-btn[data-t="green"]   { background: #020a02; }
-    .theme-btn[data-t="sepia"]   { background: #1a1510; }
-    .theme-btn[data-t="light"]   { background: #f5f5f0; border-color: #ccc; }
-
-    /* ─── Responsive tweaks ──────────────────────────────────── */
-    @media (max-width: 600px) {
-      .cal-header,
-      .cal-body,
-      .cal-allday-row { grid-template-columns: 40px repeat(7, minmax(60px, 1fr)); }
-      .cal-day-header { padding: 6px 3px; }
-      .time-slot-label { padding-right: 4px; }
-      .cal-event { left: 1px; right: 1px; }
-    }
+    /* Status */
+    .sbox{padding:48px;text-align:center;font-size:12px;letter-spacing:.08em;
+          text-transform:uppercase;color:var(--fmuted)}
+    .sbox.err{color:#d44;border:1px solid #d4444433;border-radius:var(--r);margin:20px}
   </style>
 </head>
 <body>
-
 <div class="app">
 
   <!-- Header -->
-  <header class="header">
-    <div class="header-left">
+  <header class="hdr">
+    <div class="hdr-l">
       <div class="site-title" id="site-title">SCHEDULE</div>
-      <div class="site-subtitle" id="site-subtitle">LOADING...</div>
+      <div class="site-sub" id="site-sub">LOADING…</div>
     </div>
-    <div class="header-right">
-      <div class="badge" id="access-badge">GUEST</div>
-    </div>
+    <div><span class="badge" id="badge">GUEST</span></div>
   </header>
 
   <!-- Auth -->
-  <div class="auth-bar">
-    <input type="password" id="access-token" placeholder="Access token…" autocomplete="off">
-    <button class="btn primary" id="auth-btn">Unlock</button>
+  <div class="auth">
+    <input type="password" id="tok" placeholder="Access token…" autocomplete="off">
+    <button class="btn pri" id="auth-btn">Unlock</button>
   </div>
 
   <!-- Admin Panel -->
-  <section id="admin-panel">
-    <div class="admin-header">
-      <span class="admin-title">Admin Panel</span>
-      <span class="admin-note">Global settings sync via Vercel env vars. Local overrides stored in your browser.</span>
+  <section id="admin">
+    <div class="adm-hdr">
+      <span class="adm-title">Admin Panel</span>
+      <span class="adm-note">Global settings → Vercel env vars. Local blocks → your browser only.</span>
     </div>
-    <div class="admin-grid">
-
-      <!-- Left: Visual -->
-      <div class="admin-section">
-        <div class="admin-section-title">Visual Theme</div>
-
-        <div class="form-group">
-          <div class="form-label">Your Local Theme (browser only)</div>
-          <div class="theme-btns">
-            <button class="theme-btn active" data-t="default" title="Stark Dark" onclick="setLocalTheme('default')"></button>
-            <button class="theme-btn" data-t="green" title="Terminal Green" onclick="setLocalTheme('green')"></button>
-            <button class="theme-btn" data-t="sepia" title="Retro Sepia" onclick="setLocalTheme('sepia')"></button>
-            <button class="theme-btn" data-t="light" title="Light" onclick="setLocalTheme('light')"></button>
+    <div class="adm-body">
+      <div class="adm-sec">
+        <div class="adm-sec-t">Visual</div>
+        <div class="fg">
+          <div class="fl">Your local theme (browser-only)</div>
+          <div class="theme-swatches">
+            <button class="swatch on"  data-t="default" title="Dark"          onclick="setTheme('default')"></button>
+            <button class="swatch"     data-t="green"   title="Terminal Green" onclick="setTheme('green')"></button>
+            <button class="swatch"     data-t="sepia"   title="Warm Sepia"    onclick="setTheme('sepia')"></button>
+            <button class="swatch"     data-t="light"   title="Light"         onclick="setTheme('light')"></button>
           </div>
         </div>
-
-        <div class="env-info">
-          <strong>Global theme (all visitors):</strong> set <code>SITE_THEME</code> in Vercel<br>
-          Values: <code>default</code>, <code>green</code>, <code>sepia</code>, <code>light</code><br><br>
-          <strong>Redaction label:</strong> set <code>REDACT_LABEL</code> (e.g. <code>BUSY</code>)<br>
-          <strong>Site title:</strong> set <code>SITE_TITLE</code><br><br>
+        <div class="env-box">
+          <strong>Sync to ALL visitors via Vercel env vars:</strong><br>
+          Theme → <code>SITE_THEME</code> (default / green / sepia / light)<br>
+          Busy label → <code>REDACT_LABEL</code> (e.g. <code>BUSY</code>)<br>
+          Site title → <code>SITE_TITLE</code><br><br>
           <a href="https://vercel.com/dashboard" target="_blank" rel="noopener">→ Open Vercel Dashboard</a>
         </div>
       </div>
-
-      <!-- Right: Local Overrides -->
-      <div class="admin-section">
-        <div class="admin-section-title">Manual Block Events (Local)</div>
-
-        <div class="form-group">
-          <div class="form-label">Title</div>
-          <input type="text" class="form-input" id="override-title" placeholder="e.g. HOLD — PREP TIME">
+      <div class="adm-sec">
+        <div class="adm-sec-t">Manual Block Events (Local)</div>
+        <div class="fg">
+          <div class="fl">Title</div>
+          <input type="text" class="fi" id="ov-title" placeholder="e.g. PREP TIME">
         </div>
-        <div class="form-group">
-          <div class="form-label">Date &amp; Time</div>
-          <div class="form-row">
-            <input type="date" class="form-input" id="override-date">
-            <input type="time" class="form-input" id="override-start">
-            <input type="time" class="form-input" id="override-end">
+        <div class="fg">
+          <div class="fl">Date &amp; Time</div>
+          <div class="fr">
+            <input type="date" class="fi" id="ov-date">
+            <input type="time" class="fi" id="ov-s">
+            <input type="time" class="fi" id="ov-e">
           </div>
         </div>
-        <button class="btn" id="add-override-btn">+ Add Block</button>
-
-        <div class="form-group">
-          <div class="form-label">Current Blocks</div>
-          <ul id="blocker-list-el" class="blocker-list"></ul>
+        <button class="btn" id="ov-add">+ Add Block</button>
+        <div class="fg">
+          <div class="fl">Active Blocks</div>
+          <ul class="blk-list" id="blk-list"></ul>
         </div>
       </div>
-
     </div>
   </section>
 
-  <!-- Week Navigation -->
-  <div class="week-nav">
-    <button class="btn" id="prev-week">← Prev</button>
-    <button class="btn" id="today-btn">Today</button>
-    <button class="btn" id="next-week">Next →</button>
-    <span class="week-label" id="week-label"></span>
+  <!-- Week nav -->
+  <div class="wnav">
+    <button class="btn" id="prev">← Prev</button>
+    <button class="btn" id="todaybtn">Today</button>
+    <button class="btn" id="next">Next →</button>
+    <span class="wlabel" id="wlabel"></span>
   </div>
 
   <!-- Calendar -->
-  <div id="calendar-wrap" class="calendar-wrap">
-    <div class="status-box">LOADING SCHEDULE DATA…</div>
+  <div class="cal" id="cal">
+    <div class="sbox">LOADING SCHEDULE DATA…</div>
   </div>
 
-</div><!-- /app -->
+</div>
 
 <script>
-const API_URL = '/api/calendar';
+// ── Constants ─────────────────────────────────────────────────
+const API      = '/api/calendar';
+const GH       = 56;   // px per hour (must match CSS --gh)
+const HS       = 7;    // hour range start
+const HE       = 22;   // hour range end
+const DAYS     = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+const MONTHS   = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
-// ── State ──────────────────────────────────────────────────────
-let currentFeeds = [];
-let currentRole  = 'guest';
-let siteSettings = { theme: 'default', redactText: 'BUSY', siteTitle: 'SCHEDULE' };
-let localTheme   = localStorage.getItem('local_theme') || null;
-let overrides    = JSON.parse(localStorage.getItem('cfg_overrides') || '[]');
+// ── State ─────────────────────────────────────────────────────
+let feeds     = [];
+let role      = 'guest';
+let settings  = { theme:'default', redactText:'BUSY', siteTitle:'SCHEDULE' };
+let lTheme    = localStorage.getItem('ltheme') || null;
+let overrides = JSON.parse(localStorage.getItem('overrides') || '[]');
+let wOff      = 0;
 
-// Week offset: 0 = current week
-let weekOffset = 0;
+// ── Elements ──────────────────────────────────────────────────
+const $tok   = document.getElementById('tok');
+const $auth  = document.getElementById('auth-btn');
+const $badge = document.getElementById('badge');
+const $admin = document.getElementById('admin');
+const $cal   = document.getElementById('cal');
+const $wl    = document.getElementById('wlabel');
+const $title = document.getElementById('site-title');
+const $sub   = document.getElementById('site-sub');
+const $blist = document.getElementById('blk-list');
 
-// ── Elements ───────────────────────────────────────────────────
-const tokenInput   = document.getElementById('access-token');
-const authBtn      = document.getElementById('auth-btn');
-const accessBadge  = document.getElementById('access-badge');
-const adminPanel   = document.getElementById('admin-panel');
-const calWrap      = document.getElementById('calendar-wrap');
-const weekLabel    = document.getElementById('week-label');
-const siteTitle    = document.getElementById('site-title');
-const siteSubtitle = document.getElementById('site-subtitle');
-const addOverrideBtn = document.getElementById('add-override-btn');
-const blockerListEl  = document.getElementById('blocker-list-el');
+// ── Boot ──────────────────────────────────────────────────────
+applyTheme(lTheme || 'default');
+renderCal(true);
 
-// ── Init ───────────────────────────────────────────────────────
-applyTheme(localTheme || 'default');
-renderCalendar(true);
+// ── Listeners ─────────────────────────────────────────────────
+$auth.addEventListener('click', () => renderCal(true));
+$tok.addEventListener('keyup', e => { if (e.key==='Enter') renderCal(true); });
+document.getElementById('prev').addEventListener('click', () => { wOff--; renderCal(false); });
+document.getElementById('next').addEventListener('click', () => { wOff++; renderCal(false); });
+document.getElementById('todaybtn').addEventListener('click', () => { wOff=0; renderCal(false); });
+document.getElementById('ov-add').addEventListener('click', addOverride);
 
-// ── Event listeners ─────────────────────────────────────────────
-authBtn.addEventListener('click', () => renderCalendar(true));
-tokenInput.addEventListener('keyup', e => { if (e.key === 'Enter') renderCalendar(true); });
-
-document.getElementById('prev-week').addEventListener('click',  () => { weekOffset--; renderCalendar(false); });
-document.getElementById('next-week').addEventListener('click',  () => { weekOffset++; renderCalendar(false); });
-document.getElementById('today-btn').addEventListener('click',  () => { weekOffset = 0; renderCalendar(false); });
-
-addOverrideBtn.addEventListener('click', () => {
-  const title = document.getElementById('override-title').value.trim();
-  const date  = document.getElementById('override-date').value;
-  const start = document.getElementById('override-start').value;
-  const end   = document.getElementById('override-end').value;
-  if (!title || !date || !start || !end) return;
-  overrides.push({ id: Date.now().toString(), title, start: `${date}T${start}`, end: `${date}T${end}` });
-  localStorage.setItem('cfg_overrides', JSON.stringify(overrides));
-  document.getElementById('override-title').value = '';
-  renderOverridesList();
-  renderCalendar(false);
-});
-
-// ── Theme ───────────────────────────────────────────────────────
-function setLocalTheme(t) {
-  localTheme = t;
-  localStorage.setItem('local_theme', t);
+// ── Theme ─────────────────────────────────────────────────────
+function setTheme(t) {
+  lTheme = t;
+  localStorage.setItem('ltheme', t);
   applyTheme(t);
-  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.t === t));
 }
-
 function applyTheme(t) {
-  document.body.setAttribute('data-theme', t);
-  document.querySelectorAll('.theme-btn').forEach(b => b.classList.toggle('active', b.dataset.t === t));
+  document.body.setAttribute('data-theme', t || 'default');
+  document.querySelectorAll('.swatch').forEach(s => s.classList.toggle('on', s.dataset.t === (t||'default')));
 }
 
-// ── Overrides list ───────────────────────────────────────────────
-function renderOverridesList() {
-  blockerListEl.innerHTML = '';
+// ── Overrides ─────────────────────────────────────────────────
+function addOverride() {
+  const title = document.getElementById('ov-title').value.trim();
+  const date  = document.getElementById('ov-date').value;
+  const s     = document.getElementById('ov-s').value;
+  const e     = document.getElementById('ov-e').value;
+  if (!title||!date||!s||!e) return;
+  overrides.push({ id: Date.now()+'', title, start:`${date}T${s}`, end:`${date}T${e}` });
+  localStorage.setItem('overrides', JSON.stringify(overrides));
+  document.getElementById('ov-title').value = '';
+  renderBlockList();
+  renderCal(false);
+}
+function renderBlockList() {
+  $blist.innerHTML = '';
   overrides.forEach(ov => {
     const li = document.createElement('li');
-    li.className = 'blocker-item';
+    li.className = 'blk-item';
     li.innerHTML = `<span>${ov.title} · ${ov.start.replace('T',' ')}</span>`;
-    const del = document.createElement('button');
-    del.className = 'btn danger';
-    del.style.padding = '2px 7px';
-    del.style.fontSize = '10px';
-    del.textContent = 'Del';
-    del.addEventListener('click', () => {
+    const d = document.createElement('button');
+    d.className = 'btn del'; d.textContent = 'Del';
+    d.onclick = () => {
       overrides = overrides.filter(o => o.id !== ov.id);
-      localStorage.setItem('cfg_overrides', JSON.stringify(overrides));
-      renderOverridesList();
-      renderCalendar(false);
-    });
-    li.appendChild(del);
-    blockerListEl.appendChild(li);
+      localStorage.setItem('overrides', JSON.stringify(overrides));
+      renderBlockList(); renderCal(false);
+    };
+    li.appendChild(d); $blist.appendChild(li);
   });
 }
 
-// ── Main render ─────────────────────────────────────────────────
-async function renderCalendar(forceFetch = false) {
+// ── Fetch + render ────────────────────────────────────────────
+async function renderCal(fetch) {
   try {
-    if (forceFetch || currentFeeds.length === 0) {
-      const token = tokenInput.value.trim();
-      calWrap.innerHTML = '<div class="status-box">FETCHING SCHEDULE DATA…</div>';
-      const res = await fetch(`${API_URL}?token=${encodeURIComponent(token)}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data = await res.json();
-      currentFeeds  = data.feeds    || [];
-      currentRole   = data.accessLevel || 'guest';
-      siteSettings  = data.siteSettings || siteSettings;
+    if (fetch || feeds.length === 0) {
+      const token = $tok.value.trim();
+      $cal.innerHTML = '<div class="sbox">FETCHING SCHEDULE DATA…</div>';
+      const r = await window.fetch(`${API}?token=${encodeURIComponent(token)}`);
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      const d = await r.json();
+      feeds    = d.feeds || [];
+      role     = d.accessLevel || 'guest';
+      settings = d.siteSettings || settings;
     }
-  } catch (err) {
-    calWrap.innerHTML = `<div class="status-box error">ERR: ${err.message}</div>`;
+  } catch(err) {
+    $cal.innerHTML = `<div class="sbox err">ERR: ${err.message}</div>`;
     return;
   }
 
-  // Update header
-  siteTitle.textContent    = siteSettings.siteTitle || 'SCHEDULE';
-  siteSubtitle.textContent = `VIEWING AS ${currentRole.toUpperCase()}`;
-  accessBadge.textContent  = currentRole === 'specialguest' ? 'SPECIAL GUEST' : currentRole.toUpperCase();
-  accessBadge.className    = `badge ${currentRole}`;
-  adminPanel.style.display = currentRole === 'admin' ? 'block' : 'none';
+  // Update chrome
+  $title.textContent = settings.siteTitle || 'SCHEDULE';
+  $sub.textContent   = `VIEWING AS ${role.toUpperCase()}`;
+  $badge.textContent = role === 'specialguest' ? 'SPECIAL GUEST' : role.toUpperCase();
+  $badge.className   = `badge ${role}`;
+  $admin.style.display = role === 'admin' ? 'block' : 'none';
+  applyTheme(lTheme || settings.theme || 'default');
 
-  // Apply global theme (server) unless admin set a local override
-  if (!localTheme || localTheme === (localStorage.getItem('local_theme') || null)) {
-    applyTheme(localTheme || siteSettings.theme || 'default');
-  }
-
-  // Parse events from all feeds
-  const allEvents = parseFeeds(currentFeeds);
-
-  // Add local overrides (only visible to admin / special guest as real titles; guests see redact)
+  // Events
+  const evs = parseFeeds(feeds);
   overrides.forEach(ov => {
     const s = new Date(ov.start), e = new Date(ov.end);
-    if (e >= new Date()) {
-      allEvents.push({
-        title: currentRole === 'guest' ? siteSettings.redactText : ov.title,
-        startDate: s,
-        endDate:   e,
-        allDay: false,
-        isOverride: true
-      });
-    }
+    if (e >= new Date()) evs.push({
+      title: role==='guest' ? settings.redactText : ov.title,
+      startDate:s, endDate:e, allDay:false, override:true
+    });
   });
 
-  renderWeek(allEvents);
-  renderOverridesList();
+  drawWeek(evs);
+  renderBlockList();
 }
 
-// ── Parse iCal feeds ────────────────────────────────────────────
-function parseFeeds(feeds) {
-  const events = [];
-  feeds.forEach(feedData => {
+// ── iCal parse ────────────────────────────────────────────────
+function parseFeeds(rawFeeds) {
+  const evs = [];
+  rawFeeds.forEach(txt => {
     let jcal;
-    try { jcal = ICAL.parse(feedData); } catch { return; }
-    const comp    = new ICAL.Component(jcal);
-    const vevents = comp.getAllSubcomponents('vevent');
-    const now     = ICAL.Time.now();
-    const winEnd  = now.clone();
-    winEnd.addDuration(new ICAL.Duration({ days: 60 }));
+    try { jcal = ICAL.parse(txt); } catch { return; }
+    const comp = new ICAL.Component(jcal);
+    const vev  = comp.getAllSubcomponents('vevent');
+    const now  = ICAL.Time.now();
+    const end  = now.clone();
+    end.addDuration(new ICAL.Duration({ days:60 }));
 
-    vevents.forEach(vevent => {
-      const event = new ICAL.Event(vevent);
-      const dtstart = event.startDate;
-      const allDay  = dtstart && dtstart.isDate;
-
-      if (event.isRecurring()) {
-        const iter = event.iterator();
-        let next;
-        while ((next = iter.next()) && next.compare(winEnd) < 0) {
-          if (next.compare(now) >= 0 || allDay) {
-            const occ = event.getOccurrenceDetails(next);
-            events.push({
-              title:     event.summary || siteSettings.redactText,
-              startDate: occ.startDate.toJSDate(),
-              endDate:   occ.endDate.toJSDate(),
-              allDay
-            });
+    vev.forEach(ve => {
+      const ev     = new ICAL.Event(ve);
+      const allDay = ev.startDate && ev.startDate.isDate;
+      if (ev.isRecurring()) {
+        const it = ev.iterator();
+        let nx;
+        while ((nx = it.next()) && nx.compare(end) < 0) {
+          if (nx.compare(now) >= 0) {
+            const occ = ev.getOccurrenceDetails(nx);
+            evs.push({ title: ev.summary||settings.redactText,
+              startDate:occ.startDate.toJSDate(), endDate:occ.endDate.toJSDate(), allDay });
           }
         }
       } else {
         try {
-          if (event.endDate.compare(now) >= 0) {
-            events.push({
-              title:     event.summary || siteSettings.redactText,
-              startDate: event.startDate.toJSDate(),
-              endDate:   event.endDate.toJSDate(),
-              allDay
-            });
-          }
-        } catch { /* skip malformed */ }
+          if (ev.endDate.compare(now) >= 0)
+            evs.push({ title: ev.summary||settings.redactText,
+              startDate:ev.startDate.toJSDate(), endDate:ev.endDate.toJSDate(), allDay });
+        } catch {}
       }
     });
   });
-  return events;
+  return evs;
 }
 
-// ── Render weekly grid ──────────────────────────────────────────
-const HOURS_START = 7;
-const HOURS_END   = 22;
-const HOUR_HEIGHT = 56; // px per hour
-
-function getWeekDays(offset) {
-  const now = new Date();
-  const day = now.getDay(); // 0=Sun
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - ((day === 0 ? 7 : day) - 1) + offset * 7);
-  monday.setHours(0,0,0,0);
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(monday);
-    d.setDate(monday.getDate() + i);
-    return d;
+// ── Draw weekly grid ──────────────────────────────────────────
+function getWeekDays(off) {
+  const now = new Date(), dow = now.getDay();
+  const mon = new Date(now);
+  mon.setDate(now.getDate() - ((dow===0?7:dow)-1) + off*7);
+  mon.setHours(0,0,0,0);
+  return Array.from({length:7}, (_,i) => {
+    const d = new Date(mon); d.setDate(mon.getDate()+i); return d;
   });
 }
+function sameDay(a,b){ return a.getFullYear()===b.getFullYear()&&a.getMonth()===b.getMonth()&&a.getDate()===b.getDate(); }
+function fmt(d){ return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true}); }
+function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-function isSameDay(a, b) {
-  return a.getFullYear() === b.getFullYear() &&
-         a.getMonth()    === b.getMonth()    &&
-         a.getDate()     === b.getDate();
-}
-
-function fmt12(date) {
-  return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
-}
-
-function renderWeek(allEvents) {
-  const days    = getWeekDays(weekOffset);
-  const today   = new Date();
-  const DAY_NAMES = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-  const MONTH_NAMES = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+function drawWeek(evs) {
+  const days  = getWeekDays(wOff);
+  const today = new Date();
+  const THrs  = HE - HS + 1;
 
   // Week label
-  const first = days[0], last = days[6];
-  weekLabel.textContent = `${MONTH_NAMES[first.getMonth()]} ${first.getDate()} – ${MONTH_NAMES[last.getMonth()]} ${last.getDate()}, ${last.getFullYear()}`;
+  const f=days[0], l=days[6];
+  $wl.textContent = `${MONTHS[f.getMonth()]} ${f.getDate()} – ${MONTHS[l.getMonth()]} ${l.getDate()}, ${l.getFullYear()}`;
 
-  // Bucket events by day
+  // Bucket
   const byDay = days.map(d => ({
-    timed:  allEvents.filter(e => !e.allDay && isSameDay(e.startDate, d)),
-    allDay: allEvents.filter(e =>  e.allDay && isSameDay(e.startDate, d))
+    timed:  evs.filter(e => !e.allDay && sameDay(e.startDate,d)),
+    allDay: evs.filter(e =>  e.allDay && sameDay(e.startDate,d))
   }));
 
-  // Build HTML
-  let html = '';
+  let h = '';
 
-  // ── Day header row
-  html += `<div class="cal-header">`;
-  html += `<div class="cal-header-gutter"></div>`;
-  days.forEach((d, i) => {
-    const isToday = isSameDay(d, today);
-    html += `<div class="cal-day-header${isToday ? ' today' : ''}">
-      <span>${DAY_NAMES[i]}</span>
+  // ── Day header
+  h += `<div class="cal-hdr"><div class="cal-hdr-gut"></div>`;
+  days.forEach((d,i) => {
+    const t = sameDay(d,today);
+    h += `<div class="cal-dh${t?' today':''}">
+      <span>${DAYS[i]}</span>
       <span class="day-num">${d.getDate()}</span>
     </div>`;
   });
-  html += `</div>`; // /cal-header
+  h += `</div>`;
 
   // ── All-day row
-  html += `<div class="cal-allday-row">`;
-  html += `<div class="allday-gutter">all‑day</div>`;
-  byDay.forEach(({ allDay }) => {
-    html += `<div class="allday-col">`;
-    allDay.forEach(e => {
-      html += `<div class="allday-event">${esc(e.title)}</div>`;
-    });
-    html += `</div>`;
+  h += `<div class="cal-allday"><div class="cal-allday-gut">all-day</div>`;
+  byDay.forEach(({allDay}) => {
+    h += `<div class="cal-ad-col">`;
+    allDay.forEach(e => { h += `<div class="ad-ev">${esc(e.title)}</div>`; });
+    h += `</div>`;
   });
-  html += `</div>`;
+  h += `</div>`;
 
-  // ── Body
-  html += `<div class="cal-body">`;
+  // ── Body row
+  h += `<div class="cal-body">`;
 
   // Time gutter
-  html += `<div class="time-gutter">`;
-  for (let h = HOURS_START; h <= HOURS_END; h++) {
-    const label = h === 0 ? '12 AM' : h < 12 ? `${h} AM` : h === 12 ? '12 PM' : `${h-12} PM`;
-    html += `<div class="time-slot-label">${label}</div>`;
+  h += `<div class="cal-gut">`;
+  for (let hr = HS; hr <= HE; hr++) {
+    const lbl = hr===0?'12 AM':hr<12?`${hr} AM`:hr===12?'12 PM':`${hr-12} PM`;
+    h += `<div class="cal-gut-cell">${lbl}</div>`;
   }
-  html += `</div>`;
+  h += `</div>`;
 
-  // Day columns
-  const totalHours = HOURS_END - HOURS_START + 1;
-  const colHeight  = totalHours * HOUR_HEIGHT;
+  // Columns
+  h += `<div class="cal-cols">`;
+  byDay.forEach(({timed}, di) => {
+    const isToday = sameDay(days[di], today);
+    h += `<div class="cal-col${isToday?' today':''}">`;
 
-  byDay.forEach(({ timed }, di) => {
-    const isToday = isSameDay(days[di], today);
-    html += `<div class="cal-day-col${isToday ? ' today' : ''}" style="height:${colHeight}px">`;
+    // Hour cells (visual grid lines)
+    for (let i=0; i<THrs; i++) h += `<div class="h-cell"></div>`;
 
-    // Hour grid cells
-    for (let h = 0; h < totalHours; h++) {
-      html += `<div class="hour-cell"></div>`;
-    }
-
-    // Now line (today only)
-    if (isToday && weekOffset === 0) {
+    // Now line
+    if (isToday && wOff===0) {
       const now    = new Date();
-      const nowMin = (now.getHours() - HOURS_START) * 60 + now.getMinutes();
-      const top    = (nowMin / 60) * HOUR_HEIGHT;
-      if (nowMin >= 0 && nowMin <= totalHours * 60) {
-        html += `<div class="now-line" style="top:${top}px"><div class="now-dot"></div></div>`;
+      const nowMin = (now.getHours()-HS)*60 + now.getMinutes();
+      if (nowMin>=0 && nowMin<=THrs*60) {
+        const top = (nowMin/60)*GH;
+        h += `<div class="now-line" style="top:${top}px"><div class="now-dot"></div></div>`;
       }
     }
 
     // Events
-    html += `<div class="cal-events-layer">`;
+    h += `<div class="ev-layer">`;
     timed.forEach(e => {
-      const startMin = (e.startDate.getHours() - HOURS_START) * 60 + e.startDate.getMinutes();
-      const endMin   = (e.endDate.getHours()   - HOURS_START) * 60 + e.endDate.getMinutes();
-      const clampStart = Math.max(0, startMin);
-      const clampEnd   = Math.min(totalHours * 60, endMin);
-      if (clampEnd <= clampStart) return;
-
-      const top    = (clampStart / 60) * HOUR_HEIGHT;
-      const height = Math.max(18, ((clampEnd - clampStart) / 60) * HOUR_HEIGHT - 2);
-      const isBusy = e.title === siteSettings.redactText;
-      const classes = ['cal-event', isBusy ? 'busy' : '', e.isOverride ? 'override' : ''].filter(Boolean).join(' ');
-
-      html += `<div class="${classes}" style="top:${top}px;height:${height}px">
-        <div class="event-name">${esc(e.title)}</div>
-        <div class="event-time-label">${fmt12(e.startDate)} – ${fmt12(e.endDate)}</div>
+      const sm = (e.startDate.getHours()-HS)*60 + e.startDate.getMinutes();
+      const em = (e.endDate.getHours()  -HS)*60 + e.endDate.getMinutes();
+      const cs = Math.max(0, sm), ce = Math.min(THrs*60, em);
+      if (ce <= cs) return;
+      const top = (cs/60)*GH;
+      const ht  = Math.max(20, ((ce-cs)/60)*GH - 2);
+      const busy = e.title === settings.redactText;
+      const cls  = `ev${busy?' busy':''}${e.override?' override':''}`;
+      h += `<div class="${cls}" style="top:${top}px;height:${ht}px">
+        <div class="ev-name">${esc(e.title)}</div>
+        <div class="ev-time">${fmt(e.startDate)} – ${fmt(e.endDate)}</div>
       </div>`;
     });
-    html += `</div>`; // /cal-events-layer
-
-    html += `</div>`; // /cal-day-col
+    h += `</div>`; // ev-layer
+    h += `</div>`; // cal-col
   });
+  h += `</div>`; // cal-cols
+  h += `</div>`; // cal-body
 
-  html += `</div>`; // /cal-body
-  calWrap.innerHTML = html;
-}
-
-function esc(str) {
-  return String(str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  $cal.innerHTML = h;
 }
 </script>
 </body>
