@@ -1,0 +1,8 @@
+{
+  "name": "brutalist-schedule",
+  "version": "1.0.0",
+  "description": "Minimalist brutalist schedule viewer",
+  "engines": {
+    "node": ">=18.x"
+  }
+}

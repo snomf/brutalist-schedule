@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SCHEDULE // SYS</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/ical.js/1.5.0/ical.min.js"></script>
+  <style>
+    :root {
+      --bg: #000000;
+      --fg: #FFFFFF;
+      --border: 2px solid #FFFFFF;
+      --font: 'Courier New', Courier, monospace;
+    }
+    
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--fg);
+      font-family: var(--font);
+      line-height: 1.5;
+      padding: 2rem;
+      text-transform: uppercase;
+      min-height: 100vh;
+    }
+
+    header {
+      margin-bottom: 3rem;
+      border-bottom: var(--border);
+      padding-bottom: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: bold;
+      letter-spacing: -2px;
+      margin: 0;
+    }
+
+    .auth-container {
+      display: flex;
+      gap: 1rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    input[type="password"] {
+      background: var(--bg);
+      color: var(--fg);
+      border: var(--border);
+      padding: 0.75rem 1rem;
+      font-family: var(--font);
+      font-size: 1rem;
+      outline: none;
+      width: 100%;
+      max-width: 350px;
+    }
+
+    input[type="password"]:focus {
+      background: var(--fg);
+      color: var(--bg);
+    }
+
+    input[type="password"]::placeholder {
+      color: #888888;
+    }
+
+    button {
+      background: var(--fg);
+      color: var(--bg);
+      border: var(--border);
+      padding: 0.75rem 1.5rem;
+      font-family: var(--font);
+      font-size: 1rem;
+      cursor: pointer;
+      font-weight: bold;
+      text-transform: uppercase;
+      transition: all 0.1s;
+    }
+
+    button:hover, button:active {
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    #calendar-container {
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr;
+    }
+
+    @media (min-width: 768px) {
+      #calendar-container {
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      }
+    }
+
+    .event {
+      border: var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    .event-time {
+      font-size: 0.9rem;
+      letter-spacing: 1px;
+      border-bottom: 1px solid var(--fg);
+      padding-bottom: 0.75rem;
+    }
+
+    .event-title {
+      font-size: 1.4rem;
+      font-weight: bold;
+      word-wrap: break-word;
+    }
+
+    .loading, .error {
+      font-size: 1.2rem;
+      padding: 2rem;
+      border: var(--border);
+      text-align: center;
+      grid-column: 1 / -1;
+    }
+
+    .error {
+      color: var(--bg);
+      background: var(--fg);
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>SCHEDULE // SYS</h1>
+    <div class="auth-container">
+      <input type="password" id="access-token" placeholder="ENTER ACCESS TOKEN">
+      <button id="auth-btn">VERIFY</button>
+    </div>
+  </header>
+
+  <main id="calendar-container">
+    <div class="loading">FETCHING SCHEDULE DATA...</div>
+  </main>
+
+  <script>
+    const API_URL = '/api/calendar';
+    const PASS_KEY = 'specialguest';
+    let rawCalendarData = null;
+
+    const tokenInput = document.getElementById('access-token');
+    const authBtn = document.getElementById('auth-btn');
+    const container = document.getElementById('calendar-container');
+
+    // Event listeners
+    authBtn.addEventListener('click', renderCalendar);
+    tokenInput.addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') renderCalendar();
+    });
+
+    async function init() {
+      try {
+        const response = await fetch(API_URL);
+        if (!response.ok) throw new Error('DATA_UNAVAILABLE');
+        rawCalendarData = await response.text();
+        renderCalendar();
+      } catch (err) {
+        container.innerHTML = `<div class="error">ERR: ${err.message}</div>`;
+      }
+    }
+
+    function renderCalendar() {
+      if (!rawCalendarData) return;
+
+      const token = tokenInput.value.trim();
+      const isAuthorized = (token === PASS_KEY);
+      
+      try {
+        const jcalData = ICAL.parse(rawCalendarData);
+        const comp = new ICAL.Component(jcalData);
+        const vevents = comp.getAllSubcomponents('vevent');
+        
+        const events = [];
+        const now = ICAL.Time.now();
+        // Lookahead window: roughly 30 days
+        const windowEnd = now.clone();
+        windowEnd.addDuration(new ICAL.Duration({ days: 30 }));
+
+        vevents.forEach(vevent => {
+          const event = new ICAL.Event(vevent);
+          
+          if (event.isRecurring()) {
+            const iter = event.iterator();
+            let next;
+            while ((next = iter.next()) && next.compare(windowEnd) < 0) {
+              if (next.compare(now) >= 0) {
+                const occ = event.getOccurrenceDetails(next);
+                events.push({
+                  title: event.summary,
+                  startDate: occ.startDate.toJSDate(),
+                  endDate: occ.endDate.toJSDate()
+                });
+              }
+            }
+          } else {
+            if (event.endDate.compare(now) >= 0) {
+              events.push({
+                title: event.summary,
+                startDate: event.startDate.toJSDate(),
+                endDate: event.endDate.toJSDate()
+              });
+            }
+          }
+        });
+
+        // Sort by start date
+        events.sort((a, b) => a.startDate - b.startDate);
+          
+        container.innerHTML = '';
+        
+        if (events.length === 0) {
+          container.innerHTML = `<div class="event"><div class="event-title">NO UPCOMING EVENTS</div></div>`;
+          return;
+        }
+
+        events.forEach(e => {
+          const el = document.createElement('div');
+          el.className = 'event';
+
+          const timeString = formatTime(e.startDate) + ' - ' + formatTime(e.endDate);
+          const dateString = formatDate(e.startDate);
+          
+          let displayTitle = isAuthorized ? e.title : 'STATUS: BUSY';
+
+          el.innerHTML = `
+            <div class="event-time">${dateString} // ${timeString}</div>
+            <div class="event-title">${displayTitle}</div>
+          `;
+          container.appendChild(el);
+        });
+
+      } catch (err) {
+        container.innerHTML = `<div class="error">PARSE_ERR: FAILED TO PARSE ICS</div>`;
+        console.error(err);
+      }
+    }
+
+    function formatTime(date) {
+      return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
+    }
+
+    function formatDate(date) {
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' }).replace(/\//g, '.');
+    }
+
+    init();
+  </script>
+</body>
+</html>
