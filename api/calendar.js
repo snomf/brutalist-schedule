@@ -35,6 +35,10 @@ export default async function handler(req, res) {
       if (!response.ok) throw new Error(`Failed to fetch iCal: ${response.statusText}`);
       let text = await response.text();
 
+      // DNS (Do Not Share) filter — strip any event whose DESCRIPTION contains "DNS"
+      // This applies to ALL access levels: the event disappears entirely.
+      text = removeDNSEvents(text);
+
       if (accessLevel === 'guest') {
         // Server-side redaction — titles/descriptions never reach the client
         text = text.replace(/^SUMMARY[:;].*(?:\r?\n[ \t].*)*/gm,     `SUMMARY:${siteSettings.redactText}`);
@@ -53,4 +57,24 @@ export default async function handler(req, res) {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
+}
+
+/**
+ * Removes VEVENT blocks whose DESCRIPTION field contains "DNS" (case-insensitive).
+ * Handles iCal line-folding (continuation lines starting with a space or tab).
+ */
+function removeDNSEvents(icalText) {
+  // Split into VEVENT blocks, filter, reassemble
+  const VEVENT_RE = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
+  return icalText.replace(VEVENT_RE, (block) => {
+    // Unfold the block for reliable matching
+    const unfolded = block.replace(/\r?\n[ \t]/g, '');
+    // Extract the DESCRIPTION value (unfolded)
+    const descMatch = unfolded.match(/^DESCRIPTION[:;](.*)/m);
+    if (descMatch) {
+      const desc = descMatch[1];
+      if (/\bDNS\b/i.test(desc)) return ''; // drop the whole event
+    }
+    return block;
+  });
 }
