@@ -169,6 +169,31 @@
     .ev.brown:hover { background: #372115; }
     .m-dot.brown { background: #d97706; }
 
+    /* Predefined feed colors (excluding purple/brown) */
+    .ev.cyan, .ad-ev.cyan, .m-label.cyan { background: #0c2533; border-left-color: #06b6d4; color: #ecfeff; }
+    .ev.cyan:hover { background: #113447; }
+    .m-dot.cyan { background: #06b6d4; }
+
+    .ev.emerald, .ad-ev.emerald, .m-label.emerald { background: #0a2e1d; border-left-color: #10b981; color: #ecfdf5; }
+    .ev.emerald:hover { background: #0f4029; }
+    .m-dot.emerald { background: #10b981; }
+
+    .ev.orange, .ad-ev.orange, .m-label.orange { background: #3c1e0e; border-left-color: #f97316; color: #fff7ed; }
+    .ev.orange:hover { background: #4d2813; }
+    .m-dot.orange { background: #f97316; }
+
+    .ev.blue, .ad-ev.blue, .m-label.blue { background: #0f1c3f; border-left-color: #3b82f6; color: #eff6ff; }
+    .ev.blue:hover { background: #172a5a; }
+    .m-dot.blue { background: #3b82f6; }
+
+    .ev.yellow, .ad-ev.yellow, .m-label.yellow { background: #2f2505; border-left-color: #eab308; color: #fefce8; }
+    .ev.yellow:hover { background: #3f3207; }
+    .m-dot.yellow { background: #eab308; }
+
+    .ev.red, .ad-ev.red, .m-label.red { background: #3c0c0c; border-left-color: #ef4444; color: #fef2f2; }
+    .ev.red:hover { background: #4f1212; }
+    .m-dot.red { background: #ef4444; }
+
     .ev-name{font-size:11px;font-weight:700;letter-spacing:.03em;text-transform:uppercase;
              color:var(--fg);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.3;
              display: flex; align-items: center; gap: 4px;}
@@ -361,7 +386,7 @@
     <div class="view-switch">
       <button id="v-month" onclick="setView('month')">Month</button>
       <button id="v-week" onclick="setView('week')">Week</button>
-      <button id="v-day" onclick="setView('day')">Day</button>
+      <button id="v-3day" onclick="setView('3day')">3-Day</button>
     </div>
   </div>
 
@@ -411,8 +436,12 @@ let settings     = { theme:'default', redactText:'BUSY', siteTitle:'SCHEDULE', p
 let lTheme       = localStorage.getItem('ltheme') || null;
 let token        = localStorage.getItem('access_token') || '';
 
-let currentView = 'week'; // 'month' | 'week' | 'day'
+let currentView = 'week'; // 'month' | 'week' | '3day'
 let refDate     = new Date(); // Anchor date
+
+// Shuffled calendar colors (excluding purple/brown)
+const CAL_COLORS = ['cyan', 'emerald', 'orange', 'blue', 'yellow', 'red'];
+const shuffledColors = [...CAL_COLORS].sort(() => Math.random() - 0.5);
 
 // ── Elements ──────────────────────────────────────────────────
 const $tok      = document.getElementById('tok');
@@ -473,7 +502,7 @@ function closeModals() {
   document.body.style.overflow = '';
 }
 function autoSetView() {
-  if (window.innerWidth < 600) currentView = 'day';
+  if (window.innerWidth < 600) currentView = '3day';
   else currentView = 'week';
 }
 function setView(v) {
@@ -489,13 +518,13 @@ function doTransition(cb) {
 function navPrev() {
   if (currentView === 'month') refDate.setMonth(refDate.getMonth()-1);
   else if (currentView === 'week') refDate.setDate(refDate.getDate()-7);
-  else if (currentView === 'day') refDate.setDate(refDate.getDate()-1);
+  else if (currentView === '3day') refDate.setDate(refDate.getDate()-3);
   doTransition(() => drawCalendar(feeds, publicEvents));
 }
 function navNext() {
   if (currentView === 'month') refDate.setMonth(refDate.getMonth()+1);
   else if (currentView === 'week') refDate.setDate(refDate.getDate()+7);
-  else if (currentView === 'day') refDate.setDate(refDate.getDate()+1);
+  else if (currentView === '3day') refDate.setDate(refDate.getDate()+3);
   doTransition(() => drawCalendar(feeds, publicEvents));
 }
 
@@ -519,8 +548,8 @@ function openDrawer(ev) {
     const timeStr = ev.allDay ? 'All Day' : `${fmt(ev.startDate)} – ${fmt(ev.endDate)}`;
     $dbody.innerHTML = row('Date', dateStr) + row('Time', timeStr);
   } else if (ev.busy && !ev.public) {
-    $dtitle.textContent = settings.redactText || 'BUSY';
-    $dbody.innerHTML = `<div class="busy-note">Details hidden</div>`;
+    $dtitle.textContent = "Juainny is busy during these times.";
+    $dbody.innerHTML = "";
   } else {
     $dtitle.innerHTML = `${iconImg} ${esc(displayTitle || '—')}`;
     const dateStr = ev.startDate.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
@@ -592,15 +621,19 @@ function parseFeeds(rawFeeds) {
   const now=ICAL.Time.now(), end=now.clone();
   end.addDuration(new ICAL.Duration({days:90}));
 
-  rawFeeds.forEach(txt => {
+  rawFeeds.forEach((txt, feedIndex) => {
     let jcal; try { jcal=ICAL.parse(txt); } catch { return; }
     const comp=new ICAL.Component(jcal), vev=comp.getAllSubcomponents('vevent');
+    
+    // Assign feed color class based on index
+    const type = shuffledColors[feedIndex % shuffledColors.length];
+
     vev.forEach(ve => {
       const ev=new ICAL.Event(ve), allDay=ev.startDate&&ev.startDate.isDate;
       const isBusy = (ev.summary||'').trim() === (settings.redactText||'BUSY');
       
       const dp=ve.getFirstProperty('description'), lp=ve.getFirstProperty('location'), up=ve.getFirstProperty('url');
-      const base = { description:dp?dp.getFirstValue():'', location:lp?lp.getFirstValue():'', url:up?up.getFirstValue():'', allDay, busy:isBusy };
+      const base = { description:dp?dp.getFirstValue():'', location:lp?lp.getFirstValue():'', url:up?up.getFirstValue():'', allDay, busy:isBusy, type };
 
       if (ev.isRecurring()) {
         const it=ev.iterator(); let nx;
@@ -692,8 +725,12 @@ function esc(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')
 
 function getGridDays() {
   const arr = [];
-  if (currentView === 'day') {
-    arr.push(new Date(refDate));
+  if (currentView === '3day') {
+    for(let i=0; i<3; i++) {
+      const d = new Date(refDate);
+      d.setDate(refDate.getDate() + i);
+      arr.push(d);
+    }
   } else if (currentView === 'week') {
     const dow = refDate.getDay();
     const mon = new Date(refDate); mon.setDate(refDate.getDate() - ((dow===0?7:dow)-1)); mon.setHours(0,0,0,0);
@@ -729,8 +766,9 @@ function drawCalendar(rawFeeds, rawPublic) {
   // Set Label
   if (currentView === 'month') {
     $wl.textContent = `${MONTHS[refDate.getMonth()]} ${refDate.getFullYear()}`;
-  } else if (currentView === 'day') {
-    $wl.textContent = `${DAYS[refDate.getDay()===0?6:refDate.getDay()-1]}, ${MONTHS[refDate.getMonth()]} ${refDate.getDate()}, ${refDate.getFullYear()}`;
+  } else if (currentView === '3day') {
+    const f=days[0], l=days[2];
+    $wl.textContent = `${MONTHS[f.getMonth()]} ${f.getDate()} – ${MONTHS[l.getMonth()]} ${l.getDate()}, ${l.getFullYear()}`;
   } else {
     const f=days[0], l=days[6];
     $wl.textContent = `${MONTHS[f.getMonth()]} ${f.getDate()} – ${MONTHS[l.getMonth()]} ${l.getDate()}, ${l.getFullYear()}`;
