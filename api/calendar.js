@@ -1,50 +1,63 @@
 export default async function handler(req, res) {
+  // ── Calendar URLs ──────────────────────────────────────────────────────────
   const urlsEnv = process.env.ICAL_URLS || process.env.ICAL_URL;
   if (!urlsEnv) {
-    return res.status(500).json({ error: 'ICAL_URLS or ICAL_URL environment variable is missing.' });
+    return res.status(500).json({
+      error: 'Missing env var: set ICAL_URLS (comma-separated iCal links) in your Vercel project settings.'
+    });
   }
+  const urls = urlsEnv.split(',').map(u => u.trim()).filter(Boolean);
 
-  const urls = urlsEnv.split(',').map(u => u.trim());
+  // ── Passwords (read ONLY from env vars — no hardcoded fallbacks) ───────────
+  // Set these in Vercel Dashboard → Project → Settings → Environment Variables
+  // GUEST_PASSWORD  : password for "Special Guest" access (sees real event titles)
+  // ADMIN_PASSWORD  : password for Admin access (sees titles + admin panel)
+  // Both support comma-separated lists for multiple valid passwords.
+  const guestRaw = process.env.GUEST_PASSWORD || process.env.GUEST_PASSWORDS || '';
+  const adminRaw = process.env.ADMIN_PASSWORD || process.env.ADMIN_PASSWORDS || '';
 
-  // Three-tier passwords
-  const guestTokensEnv = process.env.GUEST_PASSWORDS || process.env.ACCESS_TOKENS || process.env.ACCESS_TOKEN || 'specialguest';
-  const guestTokens = guestTokensEnv.split(',').map(t => t.trim());
+  const guestTokens = guestRaw.split(',').map(t => t.trim()).filter(Boolean);
+  const adminTokens = adminRaw.split(',').map(t => t.trim()).filter(Boolean);
 
-  const adminTokensEnv = process.env.ADMIN_PASSWORDS || process.env.ADMIN_PASSWORD || 'admin';
-  const adminTokens = adminTokensEnv.split(',').map(t => t.trim());
+  // Warn in the response if passwords are not configured (visible to admin only after login)
+  const passwordsConfigured = guestTokens.length > 0 && adminTokens.length > 0;
 
-  const providedToken = req.query.token || '';
+  const providedToken = (req.query.token || '').trim();
 
   let accessLevel = 'guest';
-  if (adminTokens.includes(providedToken)) {
+  if (adminTokens.length > 0 && adminTokens.includes(providedToken)) {
     accessLevel = 'admin';
-  } else if (guestTokens.includes(providedToken)) {
+  } else if (guestTokens.length > 0 && guestTokens.includes(providedToken)) {
     accessLevel = 'specialguest';
   }
 
-  // Global site settings — set these in Vercel env vars to sync across ALL users
+  // ── Global site settings (also from env vars) ──────────────────────────────
   const siteSettings = {
-    theme:      process.env.SITE_THEME      || 'default',
-    redactText: process.env.REDACT_LABEL    || 'BUSY',
-    siteTitle:  process.env.SITE_TITLE      || 'SCHEDULE',
+    theme:      process.env.SITE_THEME   || 'default',
+    redactText: process.env.REDACT_LABEL || 'BUSY',
+    siteTitle:  process.env.SITE_TITLE   || 'SCHEDULE',
+    passwordsConfigured,
   };
 
+  // ── Fetch & process feeds ──────────────────────────────────────────────────
   try {
     const fetchPromises = urls.map(async (url) => {
       const response = await fetch(url);
-      if (!response.ok) throw new Error(`Failed to fetch iCal: ${response.statusText}`);
+      if (!response.ok) throw new Error(`Failed to fetch calendar: ${response.statusText}`);
       let text = await response.text();
 
-      // DNS (Do Not Share) filter — strip any event whose DESCRIPTION contains "DNS"
-      // This applies to ALL access levels: the event disappears entirely.
+      // DNS (Do Not Share) — strip events with "DNS" anywhere in their DESCRIPTION
+      // Applies to ALL access levels: event is completely invisible.
       text = removeDNSEvents(text);
 
       if (accessLevel === 'guest') {
-        // Server-side redaction — titles/descriptions never reach the client
+        // Server-side redaction — sensitive data never leaves the server for guests
         text = text.replace(/^SUMMARY[:;].*(?:\r?\n[ \t].*)*/gm,     `SUMMARY:${siteSettings.redactText}`);
         text = text.replace(/^DESCRIPTION[:;].*(?:\r?\n[ \t].*)*/gm, 'DESCRIPTION:');
         text = text.replace(/^LOCATION[:;].*(?:\r?\n[ \t].*)*/gm,    'LOCATION:');
+        text = text.replace(/^URL[:;].*(?:\r?\n[ \t].*)*/gm,         'URL:');
       }
+
       return text;
     });
 
@@ -64,17 +77,10 @@ export default async function handler(req, res) {
  * Handles iCal line-folding (continuation lines starting with a space or tab).
  */
 function removeDNSEvents(icalText) {
-  // Split into VEVENT blocks, filter, reassemble
-  const VEVENT_RE = /BEGIN:VEVENT[\s\S]*?END:VEVENT/g;
-  return icalText.replace(VEVENT_RE, (block) => {
-    // Unfold the block for reliable matching
-    const unfolded = block.replace(/\r?\n[ \t]/g, '');
-    // Extract the DESCRIPTION value (unfolded)
+  return icalText.replace(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g, (block) => {
+    const unfolded  = block.replace(/\r?\n[ \t]/g, '');
     const descMatch = unfolded.match(/^DESCRIPTION[:;](.*)/m);
-    if (descMatch) {
-      const desc = descMatch[1];
-      if (/\bDNS\b/i.test(desc)) return ''; // drop the whole event
-    }
+    if (descMatch && /\bDNS\b/i.test(descMatch[1])) return '';
     return block;
   });
 }
