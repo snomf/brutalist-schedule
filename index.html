@@ -311,7 +311,6 @@
     <div class="site-title" id="site-title">SCHEDULE</div>
     <div class="auth-toggle" id="auth-icon" title="Login">
       <svg viewBox="0 0 24 24"><path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/></svg>
-      <span id="auth-label">GUEST</span>
     </div>
   </header>
 
@@ -423,7 +422,6 @@ const $title    = document.getElementById('site-title');
 const $admin    = document.getElementById('admin');
 const $warn     = document.getElementById('pw-warn');
 const $authIcon = document.getElementById('auth-icon');
-const $authLbl  = document.getElementById('auth-label');
 
 const $overlay  = document.getElementById('overlay');
 const $authMod  = document.getElementById('auth-modal');
@@ -512,13 +510,19 @@ function applyTheme(t) {
 
 // ── Drawer UI ──────────────────────────────────────────────────
 function openDrawer(ev) {
+  const displayTitle = (role === 'guest' && ev.public) ? "Bridge Scholars Program Time" : ev.title;
   const iconImg = ev.icon ? `<img src="${ev.icon}" style="height:20px;width:auto;vertical-align:middle;object-fit:contain;border-radius:2px;">` : '';
   
-  if (ev.busy && !ev.public) {
+  if (role === 'guest' && ev.public) {
+    $dtitle.innerHTML = `${iconImg} ${esc(displayTitle)}`;
+    const dateStr = ev.startDate.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+    const timeStr = ev.allDay ? 'All Day' : `${fmt(ev.startDate)} – ${fmt(ev.endDate)}`;
+    $dbody.innerHTML = row('Date', dateStr) + row('Time', timeStr);
+  } else if (ev.busy && !ev.public) {
     $dtitle.textContent = settings.redactText || 'BUSY';
     $dbody.innerHTML = `<div class="busy-note">Details hidden</div>`;
   } else {
-    $dtitle.innerHTML = `${iconImg} ${esc(ev.title || '—')}`;
+    $dtitle.innerHTML = `${iconImg} ${esc(displayTitle || '—')}`;
     const dateStr = ev.startDate.toLocaleDateString('en-US',{weekday:'long',year:'numeric',month:'long',day:'numeric'});
     const timeStr = ev.allDay ? 'All Day' : `${fmt(ev.startDate)} – ${fmt(ev.endDate)}`;
     let html = '';
@@ -571,10 +575,8 @@ async function renderCal(doFetch) {
   
   if (role === 'guest') {
     $authIcon.classList.remove('unlocked');
-    $authLbl.textContent = 'LOGIN';
   } else {
     $authIcon.classList.add('unlocked');
-    $authLbl.textContent = role === 'specialguest' ? 'SPECIAL GUEST' : 'ADMIN';
   }
   
   $admin.style.display = role==='admin' ? 'block' : 'none';
@@ -756,11 +758,12 @@ function drawCalendar(rawFeeds, rawPublic) {
         const b = (e.busy && !e.public) ? ' busy' : '';
         const typ = e.type ? ` ${e.type}` : '';
         const iconImg = e.icon ? `<img src="${e.icon}" style="height:10px;width:auto;vertical-align:middle;object-fit:contain;border-radius:1px;">` : '';
+        const displayTitle = (role === 'guest' && e.public) ? "Bridge Scholars Program Time" : e.title;
 
         // Mobile dot
-        h += `<div class="m-dot${b}${typ}" data-id="${id}" title="${esc(e.title)}"></div>`;
+        h += `<div class="m-dot${b}${typ}" data-id="${id}" title="${esc(displayTitle)}"></div>`;
         // Desktop label
-        h += `<div class="m-label${b}${typ}" data-id="${id}">${iconImg} ${esc(e.title)}</div>`;
+        h += `<div class="m-label${b}${typ}" data-id="${id}">${iconImg} ${esc(displayTitle)}</div>`;
       });
       h += `</div></div>`;
     });
@@ -785,7 +788,8 @@ function drawCalendar(rawFeeds, rawPublic) {
         const id=uid(); _evMap[id]=e;
         const typ = e.type ? ` ${e.type}` : '';
         const iconImg = e.icon ? `<img src="${e.icon}" style="height:12px;width:auto;vertical-align:middle;object-fit:contain;border-radius:1px;background:#fff;padding:1px;">` : '';
-        h += `<div class="ad-ev${typ}" data-id="${id}">${iconImg} <span>${esc(e.title)}</span></div>`;
+        const displayTitle = (role === 'guest' && e.public) ? "Bridge Scholars Program Time" : e.title;
+        h += `<div class="ad-ev${typ}" data-id="${id}">${iconImg} <span>${esc(displayTitle)}</span></div>`;
       });
       h += `</div>`;
     });
@@ -822,9 +826,10 @@ function drawCalendar(rawFeeds, rawPublic) {
         const typeClass = e.type ? ` ${e.type}` : '';
         const cls=`ev${busyClass}${typeClass}`;
         const iconImg = e.icon ? `<img src="${e.icon}" style="height:12px;width:auto;vertical-align:middle;object-fit:contain;border-radius:1px;background:#fff;padding:1px;">` : '';
+        const displayTitle = (role === 'guest' && e.public) ? "Bridge Scholars Program Time" : e.title;
         
         h+=`<div class="${cls}" style="top:${top}px;height:${ht}px" data-id="${id}">
-          <div class="ev-name">${iconImg} <span>${esc(e.title)}</span></div>
+          <div class="ev-name">${iconImg} <span>${esc(displayTitle)}</span></div>
           <div class="ev-time">${fmt(e.startDate)} – ${fmt(e.endDate)}</div>
         </div>`;
       });
