@@ -1,0 +1,120 @@
+[
+  {
+    "title": "First day of Bridge Scholars",
+    "start": "2026-07-20T13:00:00",
+    "end": "2026-07-20T17:00:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "UNIV 101: Being Proactive & Reflective in Your Education",
+    "start": "2026-07-20T13:00:00",
+    "end": "2026-07-20T13:50:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [1, 3, 5],
+      "until": "2026-08-08"
+    }
+  },
+  {
+    "title": "Cohort 3: BSP Virtual Welcome!",
+    "start": "2026-07-20T15:00:00",
+    "end": "2026-07-20T16:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "Bridge Circles: Daily Cohort Check-Ins",
+    "start": "2026-07-20T16:45:00",
+    "end": "2026-07-20T17:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "UNIV 102: Intercultural Competence for Leadership",
+    "start": "2026-07-21T13:00:00",
+    "end": "2026-07-21T14:20:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [2, 4],
+      "until": "2026-08-14"
+    }
+  },
+  {
+    "title": "Virtual Co-Working - Goal Setting",
+    "start": "2026-07-21T14:45:00",
+    "end": "2026-07-21T15:45:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [2, 4],
+      "until": "2026-08-14"
+    }
+  },
+  {
+    "title": "Bridge Circles: Daily Cohort Check-Ins",
+    "start": "2026-07-21T16:00:00",
+    "end": "2026-07-21T16:45:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [2, 4],
+      "until": "2026-08-14"
+    }
+  },
+  {
+    "title": "De-Stressing Your Writing Workshop- Writing Center",
+    "start": "2026-07-22T14:30:00",
+    "end": "2026-07-22T15:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "Bridge Circles: Daily Cohort Check-Ins",
+    "start": "2026-07-22T15:45:00",
+    "end": "2026-07-22T16:30:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [3],
+      "until": "2026-08-14"
+    }
+  },
+  {
+    "title": "Virtual Co-Working - Office Hours",
+    "start": "2026-07-23T14:45:00",
+    "end": "2026-07-23T15:45:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [2, 4],
+      "until": "2026-08-14"
+    }
+  },
+  {
+    "title": "Bridge Alumni Panel: Bridge Scholars Alumni",
+    "start": "2026-07-24T14:30:00",
+    "end": "2026-07-24T15:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "Mini Bridge Circles: Daily Cohort Check-ins",
+    "start": "2026-07-24T15:45:00",
+    "end": "2026-07-24T16:15:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "BSP In-Person Programming (Brown Move In Day)",
+    "description": "Brown Move In Day BSP In-Person Programming",
+    "start": "2026-08-17",
+    "end": "2026-09-01",
+    "allDay": true,
+    "public": true,
+    "type": "brown",
+    "icon": "https://logos-world.net/brown-university-logo/"
+  }
+]
