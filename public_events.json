@@ -116,5 +116,66 @@
     "public": true,
     "type": "brown",
     "icon": "https://wp.logos-download.com/wp-content/uploads/2019/11/Brown_University_Logo_full.png?dl"
+  },
+  {
+    "title": "Workshop: CliftonStrengths by Frank",
+    "start": "2026-07-27T14:30:00",
+    "end": "2026-07-27T15:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "Bridge Squads: Peer Counselor Small Groups",
+    "start": "2026-07-27T15:45:00",
+    "end": "2026-07-27T16:30:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [1],
+      "until": "2026-08-02"
+    }
+  },
+  {
+    "title": "Workshop: Reframing Imposter Feelings - Frank",
+    "start": "2026-07-29T14:30:00",
+    "end": "2026-07-29T15:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "Friday Fun Day!!!",
+    "start": "2026-07-31T14:30:00",
+    "end": "2026-07-31T15:30:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [5],
+      "until": "2026-08-07"
+    }
+  },
+  {
+    "title": "Workshop",
+    "start": "2026-08-03T14:30:00",
+    "end": "2026-08-03T15:30:00",
+    "public": true,
+    "type": "purple",
+    "recurrence": {
+      "days": [1],
+      "until": "2026-08-10"
+    }
+  },
+  {
+    "title": "Workshop: ",
+    "start": "2026-08-05T14:30:00",
+    "end": "2026-08-05T15:30:00",
+    "public": true,
+    "type": "purple"
+  },
+  {
+    "title": "Speaker: From the Fields to the Classroom - Felipe Lopez Sustaita",
+    "start": "2026-08-12T14:30:00",
+    "end": "2026-08-12T15:45:00",
+    "public": true,
+    "type": "purple"
   }
 ]
