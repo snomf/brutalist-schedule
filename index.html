@@ -640,11 +640,19 @@ function parseFeeds(rawFeeds) {
         while ((nx=it.next()) && nx.compare(end)<0) {
           if (nx.compare(now)>=0 || currentView==='month') {
              const occ=ev.getOccurrenceDetails(nx);
-             evs.push({...base, title:ev.summary||settings.redactText, startDate:occ.startDate.toJSDate(), endDate:occ.endDate.toJSDate()});
+             let startDate = occ.startDate.toJSDate();
+             let endDate = occ.endDate.toJSDate();
+             if (allDay) endDate = new Date(endDate.getTime() - 1000);
+             evs.push({...base, title:ev.summary||settings.redactText, startDate, endDate});
           }
         }
       } else {
-        try { evs.push({...base, title:ev.summary||settings.redactText, startDate:ev.startDate.toJSDate(), endDate:ev.endDate.toJSDate()}); } catch {}
+        try {
+          let startDate = ev.startDate.toJSDate();
+          let endDate = ev.endDate.toJSDate();
+          if (allDay) endDate = new Date(endDate.getTime() - 1000);
+          evs.push({...base, title:ev.summary||settings.redactText, startDate, endDate});
+        } catch {}
       }
     });
   });
