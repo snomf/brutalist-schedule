@@ -43,16 +43,7 @@ export default async function handler(req, res) {
       if (!response.ok) throw new Error(`Failed to fetch calendar: ${response.statusText}`);
       let text = await response.text();
 
-      // DNS Filter
-      text = removeDNSEvents(text);
-
-      if (accessLevel === 'guest') {
-        text = text.replace(/^SUMMARY[:;].*(?:\r?\n[ \t].*)*/gm,     `SUMMARY:${siteSettings.redactText}`);
-        text = text.replace(/^DESCRIPTION[:;].*(?:\r?\n[ \t].*)*/gm, 'DESCRIPTION:');
-        text = text.replace(/^LOCATION[:;].*(?:\r?\n[ \t].*)*/gm,    'LOCATION:');
-        text = text.replace(/^URL[:;].*(?:\r?\n[ \t].*)*/gm,         'URL:');
-      }
-
+      text = processVEVENTBlocks(text, accessLevel === 'guest', siteSettings.redactText);
       return text;
     });
 
@@ -78,11 +69,26 @@ export default async function handler(req, res) {
   }
 }
 
-function removeDNSEvents(icalText) {
+function processVEVENTBlocks(icalText, redact, redactText) {
   return icalText.replace(/BEGIN:VEVENT[\s\S]*?END:VEVENT/g, (block) => {
-    const unfolded  = block.replace(/\r?\n[ \t]/g, '');
+    const unfolded = block.replace(/\r?\n[ \t]/g, '');
+    
+    // DNS Filter
     const descMatch = unfolded.match(/^DESCRIPTION[:;](.*)/m);
-    if (descMatch && /\bDNS\b/i.test(descMatch[1])) return '';
+    if (descMatch && /\bDNS\b/i.test(descMatch[1])) {
+      return '';
+    }
+
+    // Guest Redaction
+    if (redact) {
+      const isPublicKeyword = /florida|LGA|JFK/i.test(unfolded);
+      if (!isPublicKeyword) {
+        block = block.replace(/^SUMMARY[:;].*(?:\r?\n[ \t].*)*/gm,     `SUMMARY:${redactText}`);
+        block = block.replace(/^DESCRIPTION[:;].*(?:\r?\n[ \t].*)*/gm, 'DESCRIPTION:');
+        block = block.replace(/^LOCATION[:;].*(?:\r?\n[ \t].*)*/gm,    'LOCATION:');
+        block = block.replace(/^URL[:;].*(?:\r?\n[ \t].*)*/gm,         'URL:');
+      }
+    }
     return block;
   });
 }

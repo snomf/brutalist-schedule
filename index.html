@@ -774,11 +774,15 @@ function drawCalendar(rawFeeds, rawPublic) {
     $wl.textContent = `${MONTHS[f.getMonth()]} ${f.getDate()} – ${MONTHS[l.getMonth()]} ${l.getDate()}, ${l.getFullYear()}`;
   }
 
-  const byDay = days.map(d => ({
-    d, isToday: sameDay(d, today),
-    timed: allEvs.filter(e => !e.allDay && sameDay(e.startDate,d)),
-    allDay: allEvs.filter(e => e.allDay && sameDay(e.startDate,d))
-  }));
+  const byDay = days.map(d => {
+    const dStart = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 0, 0, 0);
+    const dEnd = new Date(d.getFullYear(), d.getMonth(), d.getDate(), 23, 59, 59, 999);
+    return {
+      d, isToday: sameDay(d, today),
+      timed: allEvs.filter(e => !e.allDay && e.startDate <= dEnd && e.endDate >= dStart),
+      allDay: allEvs.filter(e => e.allDay && e.startDate <= dEnd && e.endDate >= dStart)
+    };
+  });
 
   let h = '';
 
@@ -854,8 +858,13 @@ function drawCalendar(rawFeeds, rawPublic) {
       // Events
       h += `<div class="ev-layer">`;
       cell.timed.forEach(e => {
-        const sm=(e.startDate.getHours()-HS)*60+e.startDate.getMinutes();
-        const em=(e.endDate.getHours()  -HS)*60+e.endDate.getMinutes();
+        const dStart = new Date(cell.d.getFullYear(), cell.d.getMonth(), cell.d.getDate(), 0, 0, 0);
+        const dEnd = new Date(cell.d.getFullYear(), cell.d.getMonth(), cell.d.getDate(), 23, 59, 59, 999);
+        const startForDay = e.startDate < dStart ? dStart : e.startDate;
+        const endForDay = e.endDate > dEnd ? dEnd : e.endDate;
+
+        const sm=(startForDay.getHours()-HS)*60+startForDay.getMinutes();
+        const em=(endForDay.getHours()  -HS)*60+endForDay.getMinutes();
         const cs=Math.max(0,sm), ce=Math.min(THrs*60,em);
         if(ce<=cs) return;
         const top=(cs/60)*GH, ht=Math.max(20,((ce-cs)/60)*GH-2);
